@@ -13,6 +13,7 @@ This script will create the xStorage object which has methods to access the cros
 
 
 # Usage
+You can get, set, merge, or delete properties using the associated function on the xStorage object.<br>
 
 ## Set
 Set a property on the cross-domain localStorage object.<br><br>
