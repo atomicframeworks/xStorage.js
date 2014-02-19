@@ -56,7 +56,7 @@ Syntax - `xStore.merge(object)` <br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls. <br>
 Resolves - An object containing all properties and values. <br>
 
-Passing an object will merge all properties and values with the cross-domain localStorage object.  If any of the values are null in the object to merge they will be erased from the cross-domain localStorage.
+Passing an object will merge all properties and values with the cross-domain localStorage object.  If a property value is set to null or undefined in the object to merge they will be erased from the cross-domain localStorage.
 
 ##### Example
 ```js

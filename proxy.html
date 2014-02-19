@@ -6,7 +6,7 @@
         <script>            
             // Helper function to determine if the item is an object (not including arrays)
             function isObject(item) {
-                return (item instanceof Object && typeof(item) === 'object' && ! (item instanceof Array) );
+                return (item instanceof Object && typeof item === 'object' && !(item instanceof Array));
             }
 
             // Helper function to determine if the item is an array
@@ -17,8 +17,9 @@
             // Helper function to determine if empty object
             function isEmptyObject(item) {
                 for(var prop in item) {
-                    if(item.hasOwnProperty(prop))
+                    if (item.hasOwnProperty(prop)) {
                         return false;
+                    }
                 }
                 return true;
             }
@@ -37,7 +38,7 @@
                 }
                 return ret;
             }
-            
+
             // Helper function to deep merge object
             function recursiveMerge(objectOne, objectTwo) {
                 for (var property in objectTwo) {
@@ -50,19 +51,18 @@
                             }
                             objectOne[property] = recursiveMerge(objectOne[property], objectTwo[property]);
                         } else {
-                            // If set to null remove the item
-                            if (objectTwo[property] === null){
+                            // If set to null or undefined remove the item
+                            if (objectTwo[property] === null || objectTwo[property] === undefined) {
                                 delete objectOne[property];
                             } else {
                                 objectOne[property] = objectTwo[property];
                             }
-                            
                         }
                     }
                 }
                 return objectOne;
             }
-            
+
             // Function to get the dashboardlet storage object from localStorage
             function getStorage(property, storageKey) {
                 var ret, i, l, retArray;
@@ -87,7 +87,7 @@
                 }               
                 return ret;
             }
-            
+
             // Function to set an attr on storage object
             // Uses deep merge for item in to storage
             function setStorage(item, storageKey) {
@@ -146,7 +146,6 @@
                         // No property to delete so delete all storage
                         returnData.storageObject = writeStorage({}, storageKey);  
                     }
-                    
                 } else {
                     //console.log('bad event');
                     returnData.error = 'Invalid event: ' + message.event;
@@ -155,7 +154,7 @@
                 if (returnData.storageObject || returnData.error) {
                     // Set deferred hash
                     if (message.deferredHash) {
-                        returnData.deferredHash = message.deferredHash;                        
+                        returnData.deferredHash = message.deferredHash;
                     }
                 }
                 // Post the return message back as JSON
