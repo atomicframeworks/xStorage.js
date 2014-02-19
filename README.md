@@ -1,8 +1,8 @@
 # xStorage.js
-Cross-domain localStorage asynchronously<br>
+Behold the power of asynchronous cross-domain localStorage utilizing Github pages as a localStorage proxy!<br>
 
 ## About
-xStorage.js provides an easy interface for cross-domain localStorage utilizing asynchronous Promises.  When the script is loaded it creates a hidden iFrame with the proxy 
+xStorage.js provides an easy to use interface for cross-domain localStorage utilizing asynchronous Promises.  When the script is loaded it creates a hidden iFrame to a localStorage proxy.  Messages are passed between the iFrame and the current page to faciliate the cross-domain localStorage.
 
 ## Installation
 1. Include the xStorage.js file on the page where you wish to acess cross-domain localStorage. No other requirements to start using xStorage.js! If you do not feel like hosting your own storage proxy simply use the standard settings. <br>
