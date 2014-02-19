@@ -1,4 +1,13 @@
-var xStorage = (function(globals) {
+/*!
+                        
+       ##    #####      Copyright (c) - Kevin McGinty
+     # _ #  ###        
+    #   #  #            AtomicFrameworks
+    
+*/
+/*global document*/
+var xStorage = (function (globals) {
+    'use strict';
     // Object to store deferred callbacks
     var deferredObject = {},
         // The variable on proxy localStorage that wil used as an object store
@@ -11,20 +20,21 @@ var xStorage = (function(globals) {
         iframe = document.createElement("iframe"),
         // Window object used to pass messages between the iframes
         proxyWindowObject,
-        Deferred = (globals.Promise) ? globals.Promise : function(func) {
+        Deferred = globals.Promise || function (func) {
             var that = this;
             // Fake promise interface if Promise not available
             that.callbacks = [];
             that.errorbacks = [];
-            that.then = function(callback, errorback) {
+            that.then = function (callback, errorback) {
                 if (errorback) {
                     that.errorbacks[that.callbacks.length] = errorback;
                 }
                 that.callbacks.push(callback);
                 return that;
             };
-            that.resolve = function(data) {
-                for (var i = 0; i < that.callbacks.length; i++) {
+            that.resolve = function (data) {
+                var i = 0, l = that.callbacks.length;
+                for (i; i < l; i += 1) {
                     try {
                         data = that.callbacks[i](data);
                     } catch (e) {
@@ -36,7 +46,7 @@ var xStorage = (function(globals) {
                     }
                 }
             };
-            that.reject = function(e) {
+            that.reject = function (e) {
                 if (that.errorbacks.length) {
                     that.errorbacks[that.errorbacks.length](e);
                 } else {
@@ -51,20 +61,10 @@ var xStorage = (function(globals) {
     iframe.setAttribute("src", proxyDomain + proxyPage);
     iframe = document.body.appendChild(iframe);
     proxyWindowObject = iframe.contentWindow;
-   
-    // Helper function to determine if empty object
-    function isEmptyObject(item) {
-        for(var prop in item) {
-            if (item.hasOwnProperty(prop)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
+
     // Helper function to determine if the item is an object (not including arrays)
     function isObject(item) {
-        return (item instanceof Object && typeof(item) === 'object' && ! (item instanceof Array) );
+        return (item instanceof Object && typeof item === 'object' && !(item instanceof Array));
     }
 
     // Helper to return a random string to serve as a simple hash
@@ -72,30 +72,9 @@ var xStorage = (function(globals) {
         return Math.random().toString(36).substr(2);
     }
 
-    // Function to get localStorage from proxy
-    function getStorage(property) {
-        return new Deferred(function(resolve, reject) {
-            // Message to get storage
-            var hash = randomHash(),
-                message = JSON.stringify({
-                    'event': 'get',
-                    'storageKey': storageKey,
-                    'item': property,
-                    'deferredHash': hash
-                });
-            // Set the deferred object reference
-            deferredObject[hash] = {
-                resolve: resolve,
-                reject: reject,
-            };
-            // Send the message and target URI
-            proxyWindowObject.postMessage(message, '*'); 
-        });
-    }
-
-    // Helper to create the functions for promises
-    function createPromiseFunction(event, item) {
-        return function(resolve, reject) {
+     // Helper to create the functions for promises
+    function createPromisefunction(event, item) {
+        return function (resolve, reject) {
             // Message to set the storage
             var hash = randomHash(),
                 message = JSON.stringify({
@@ -107,11 +86,18 @@ var xStorage = (function(globals) {
             // Set the deferred object reference
             deferredObject[hash] = {
                 resolve: resolve,
-                reject: reject,
+                reject: reject
             };
             // Send the message and target URI
             proxyWindowObject.postMessage(message, '*');
         };
+    }
+
+    // Function to get localStorage from proxy
+    function getStorage(property) {
+        return new Deferred(
+            createPromisefunction('get', property)
+        );
     }
 
     // Function to set localStorage on proxy
@@ -120,7 +106,7 @@ var xStorage = (function(globals) {
             throw new Error('Property argument must be a string or number to set a specific property');
         }
         return new Deferred(
-            createPromiseFunction('set', {
+            createPromisefunction('set', {
                 'property': property,
                 'value': value
             })
@@ -133,25 +119,26 @@ var xStorage = (function(globals) {
             throw new Error('Argument must be an object to merge with xStorage object');
         }
         return new Deferred(
-            createPromiseFunction('merge', storageObject)
+            createPromisefunction('merge', storageObject)
         );
     }
 
     // Delete a property from storage or entire storage if no property provided
     function deleteStorage(property) {
         return new Deferred(
-            createPromiseFunction('delete', {
+            createPromisefunction('delete', {
                 'property': property,
                 'value': null
             })
-        );      
+        );
     }
-    
+
     // Bind the message event for getting storage
-    (function bindWindow () {
+    (function bindWindow() {
         // Bind the message back listener
-        window.addEventListener('message', function(event) {
-            if( event.origin == proxyDomain) {
+        globals.addEventListener('message', function (event) {
+            var response;
+            if (event.origin === proxyDomain) {
                 // Parse the response
                 response = JSON.parse(event.data);
                 // if there is a deferred object resolve and remove
@@ -168,9 +155,8 @@ var xStorage = (function(globals) {
                 } else if (response.error) {
                     throw new Error(response.error);
                 }
-
             } else {
-                console.log('bad domain: ' + proxyDomain +  '  origin:' + event.origin);
+                throw new Error('Bad domain: ' + proxyDomain +  '  origin:' + event.origin);
             }
         }, false);
     }());
