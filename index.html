@@ -120,7 +120,8 @@
             }
             
             // Bind on message event
-            window.addEventListener("message", function (e) {
+            var attach = (window.addEventListener ? window.addEventListener : window.attachEvent);
+            attach("message", function (e) {
                 var returnData = {},
                     // Get the message data and parse it
                     message = JSON.parse(e.data),
