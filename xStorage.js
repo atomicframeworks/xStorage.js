@@ -8,14 +8,14 @@
 /*global document*/
 var xStorage = (function (globals) {
     'use strict';
-    // Object to store deferred callbacks
-    var deferredObject = {},
-        // The variable on proxy localStorage that wil used as an object store
-        storageKey = 'xStorage',
-        // The base domain of the proxy
-        proxyDomain = 'http://atomicframeworks.github.io',
-        // The page where the proxy JavaScript is stored
+    // Setting - The base domain of the proxy
+    var proxyDomain = 'http://atomicframeworks.github.io',
+        // Setting - The page where the proxy JavaScript is stored
         proxyPage = '/xStorage.js',
+        // Setting - The variable on proxy localStorage that wil used as an object store
+        storageKey = 'xStorage',
+        // Object to store deferred callbacks
+        deferredObject = {},
         // Create proxy iframe
         iframe = document.createElement("iframe"),
         // Window object used to pass messages between the iframes
