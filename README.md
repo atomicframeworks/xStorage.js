@@ -85,6 +85,6 @@ Passing undefined or null will delete all properties from the cross-domain local
 	});
 ```
 
-## License 
+# License 
 xStorage.js is released under the MIT license<br>
 [www.opensource.org/licenses/MIT](www.opensource.org/licenses/MIT)
