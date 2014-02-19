@@ -2,7 +2,7 @@
 Behold the power of asynchronous cross-domain localStorage utilizing Github pages as a localStorage proxy!<br>
 
 ## About
-xStorage.js provides an easy to use interface for cross-domain localStorage utilizing asynchronous Promises.  When the script is loaded it creates a hidden iFrame to a localStorage proxy.  Messages are passed between the iFrame and the current page to faciliate the cross-domain localStorage.
+xStorage.js provides an easy to use interface for cross-domain localStorage utilizing asynchronous ES6 Promises when available.  When the script is loaded it creates a hidden iFrame to a localStorage proxy.  Messages are passed between the iFrame and the current page to faciliate the cross-domain localStorage.
 
 ## Installation
 1. Include the xStorage.js file on the page where you wish to acess cross-domain localStorage. No other requirements to start using xStorage.js! If you do not feel like hosting your own storage proxy simply use the standard settings. <br>
@@ -17,7 +17,7 @@ You can get, set, merge, or delete properties using the associated function on t
 
 ## Set
 Set a property on the cross-domain localStorage object.<br><br>
-Syntax - `xStore.set(property[, value])`<br>
+Syntax - `xStorage.set(property[, value])`<br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - The cross-domain localStorage object.<br><br>
 
@@ -34,7 +34,7 @@ xStorage.set('hello', 'world').then(function(data) {
 <br>
 ## Get
 Get all properties, a single property, an array of properties, or an object containing properties & values from cross-domain localStorage.<br><br>
-Syntax - `xStore.get(properties)` <br>
+Syntax - `xStorage.get(properties)` <br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - <br>
 &nbsp;&nbsp;&nbsp;&nbsp;If you pass undefined, or null you will get an object containing all properties and values.<br>
@@ -55,7 +55,7 @@ xStorage.get('hello').then(function(data) {
 <br>
 ## Merge
 Merge an object with cross-domain localStorage.<br><br>
-Syntax - `xStore.merge(object)`<br>
+Syntax - `xStorage.merge(object)`<br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - An object containing all properties and values.<br>
 
@@ -71,7 +71,7 @@ xStorage.merge({foo: 'bar'}).then(function(data) {
 <br>
 ## Delete
 Delete a single property or all properties from cross-domain localStorage.<br><br>
-Syntax - `xStore.delete(property)`<br>
+Syntax - `xStorage.delete(property)`<br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - An object containing all properties and values.<br>
 
