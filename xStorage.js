@@ -47,9 +47,6 @@ var xStorage = (function(globals) {
                 func(that.resolve, that.reject);
             }
         };
-
-    proxyDomain = 'http://localhost:8000';
-    proxyPage = '/proxy.html';
     // Add the proxy iframe to DOM
     iframe.setAttribute("src", proxyDomain + proxyPage);
     iframe = document.body.appendChild(iframe);
