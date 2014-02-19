@@ -17,7 +17,7 @@ You can get, set, merge, or delete properties using the associated function on t
 
 ## Set
 Set a property on the cross-domain localStorage object.<br><br>
-Syntax - `xStorage.set(property[, value])`<br>
+Syntax - `xStorage.set(property[, value]);`<br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - The cross-domain localStorage object.<br><br>
 
@@ -34,7 +34,7 @@ xStorage.set('hello', 'world').then(function(data) {
 <br>
 ## Get
 Get all properties, a single property, an array of properties, or an object containing properties & values from cross-domain localStorage.<br><br>
-Syntax - `xStorage.get(properties)` <br>
+Syntax - `xStorage.get(properties);` <br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - <br>
 &nbsp;&nbsp;&nbsp;&nbsp;If you pass undefined, or null you will get an object containing all properties and values.<br>
@@ -55,7 +55,7 @@ xStorage.get('hello').then(function(data) {
 <br>
 ## Merge
 Merge an object with cross-domain localStorage.<br><br>
-Syntax - `xStorage.merge(object)`<br>
+Syntax - `xStorage.merge(object);`<br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - An object containing all properties and values.<br>
 
@@ -71,7 +71,7 @@ xStorage.merge({foo: 'bar'}).then(function(data) {
 <br>
 ## Delete
 Delete a single property or all properties from cross-domain localStorage.<br><br>
-Syntax - `xStorage.delete(property)`<br>
+Syntax - `xStorage.delete(property);`<br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls.<br>
 Resolves - An object containing all properties and values.<br>
 
