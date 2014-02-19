@@ -12,9 +12,9 @@ Cross-domain localStorage asynchronously<br>
 This script will create the xStorage object which has methods to access the cross-domain localStorage.
 
 
-## Usage
+# Usage
 
-### Set
+## Set
 Set a property <br><br>
 Syntax - `xStore.set(property[, value])` <br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls. <br>
@@ -25,12 +25,13 @@ Passing null or undefined as the value will erase the property from cross-domain
 
 ##### Example
 ```js
-	xStorage.set('hello', 'world').then(function(data) {
-		console.dir(data);
-	});
+xStorage.set('hello', 'world').then(function(data) {
+	console.dir(data);
+});
 ```
 
-### Get
+<br>
+## Get
 Get all properties, a single property, an array of properties, or an object of properties <br><br>
 Syntax - `xStore.get(properties)` <br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls. <br>
@@ -45,12 +46,13 @@ Passing null or undefined as the value will erase the property from cross-domain
 
 ##### Example
 ```js
-	xStorage.get('hello').then(function(data) {
-		console.log(data);
-	});
+xStorage.get('hello').then(function(data) {
+	console.log(data);
+});
 ```
 
-### Merge
+<br>
+## Merge
 Merge an object with properties <br><br>
 Syntax - `xStore.merge(object)` <br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls. <br>
@@ -60,13 +62,13 @@ Passing an object will merge all properties and values with the cross-domain loc
 
 ##### Example
 ```js
-	xStorage.merge({foo: 'bar'}).then(function(data) {
-		console.log(data);
-	});
+xStorage.merge({foo: 'bar'}).then(function(data) {
+	console.log(data);
+});
 ```
 
-
-### Delete
+<br>
+## Delete
 Delete a single property or all properties <br><br>
 Syntax - `xStore.delete(property)` <br>
 Returns - A Promise or deferred object that allows you to chain .then() function calls. <br>
