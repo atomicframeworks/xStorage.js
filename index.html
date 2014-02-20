@@ -5,7 +5,7 @@
     <head>
         <script>
             // IE7 and lower uses attachEvent
-            window.addEventListener = window.addEventListener || window.addEventListener;
+            window.addEventListener = window.addEventListener || window.attachEvent;
         
             // Helper function to determine if the item is an object (not including arrays)
             function isObject(item) {
