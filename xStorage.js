@@ -65,7 +65,7 @@ var xStorage = (function (globals) {
 
     // IE7 and lower uses attachEvent
     globals.addEventListener = globals.addEventListener || globals.attachEvent;
-    
+
     // Helper function to determine if the item is an object (not including arrays)
     function isObject(item) {
         return (item instanceof Object && typeof item === 'object' && !(item instanceof Array));
