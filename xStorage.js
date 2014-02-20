@@ -57,11 +57,15 @@ var xStorage = (function (globals) {
                 func(that.resolve, that.reject);
             }
         };
-    // Add the proxy iframe to DOM
-    iframe.setAttribute("src", proxyDomain + proxyPage);
+    // Add the proxy iframe to DOM and style it
+    iframe.src = proxyDomain + proxyPage;
+    iframe.style.display = "none";
     iframe = document.body.appendChild(iframe);
     proxyWindowObject = iframe.contentWindow;
 
+    // IE7 and lower uses attachEvent
+    globals.addEventListener = globals.addEventListener || globals.attachEvent;
+    
     // Helper function to determine if the item is an object (not including arrays)
     function isObject(item) {
         return (item instanceof Object && typeof item === 'object' && !(item instanceof Array));
