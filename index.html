@@ -3,6 +3,10 @@
 <!-- You can host this on your own domain (and change the proxy reference in xStorage.js), or simply ignore it and use the github.io pages as a proxy -->
 <html>
     <head>
+ 	<!-- IE7 and lower need to add JSON support -->
+    	<!--[if lte IE 7]>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/json3/3.3.0/json3.min.js"></script>
+	<![endif]-->
         <script>
             /*global localStorage*/
             (function (globals) {
