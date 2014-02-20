@@ -4,6 +4,9 @@
 <html>
     <head>
         <script>
+            // IE7 and lower uses attachEvent
+            window.addEventListener = window.addEventListener || window.addEventListener;
+        
             // Helper function to determine if the item is an object (not including arrays)
             function isObject(item) {
                 return (item instanceof Object && typeof item === 'object' && !(item instanceof Array));
@@ -120,8 +123,7 @@
             }
             
             // Bind on message event
-            var attach = (window.addEventListener ? window.addEventListener : window.attachEvent);
-            attach("message", function (e) {
+            window.addEventListener("message", function (e) {
                 var returnData = {},
                     // Get the message data and parse it
                     message = JSON.parse(e.data),
