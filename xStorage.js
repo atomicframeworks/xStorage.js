@@ -166,9 +166,9 @@ var xStorage = (function (globals) {
     }());
     // Return the public methods
     return {
-        get: getStorage,
-        set: setStorage,
-        merge: mergeStorage,
-        delete: deleteStorage
+        'get': getStorage,
+        'set': setStorage,
+        'merge': mergeStorage,
+        'delete': deleteStorage
     };
 }(this));
