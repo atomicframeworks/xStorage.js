@@ -42,9 +42,6 @@ Resolves - <br>
 &nbsp;&nbsp;&nbsp;&nbsp;If you pass an array of properties you will receive an array with the values for each property.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;If you pass an object you will receive an object containing the properties and values.<br>
 
-Passing a value will set the cross-domain localStorage property to that value.<br>
-Passing null or undefined as the value will erase the property from cross-domain localStorage.<br>
-
 ##### Example
 ```js
 xStorage.get('hello').then(function(data) {
