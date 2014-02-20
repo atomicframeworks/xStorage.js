@@ -4,165 +4,172 @@
 <html>
     <head>
         <script>
-            // IE7 and lower uses attachEvent
-            window.addEventListener = window.addEventListener || window.attachEvent;
-        
-            // Helper function to determine if the item is an object (not including arrays)
-            function isObject(item) {
-                return (item instanceof Object && typeof item === 'object' && !(item instanceof Array));
-            }
+            /*global localStorage*/
+            (function (globals) {
+                'use strict';
+                // IE7 and lower uses attachEvent
+                globals.addEventListener = globals.addEventListener || globals.attachEvent;
 
-            // Helper function to determine if the item is an array
-            function isArray(item) {
-                return (item instanceof Array);
-            }
-            
-            // Helper function to determine if empty object
-            function isEmptyObject(item) {
-                for(var prop in item) {
-                    if (item.hasOwnProperty(prop)) {
-                        return false;
-                    }
+                // Helper function to determine if the item is an object (not including arrays)
+                function isObject(item) {
+                    return (item instanceof Object && typeof item === 'object' && !(item instanceof Array));
                 }
-                return true;
-            }
 
-            // Helper function to filter an object based on a property map
-            function recursiveObjectFilter(objectItem, objectMap) {
-                var ret = {};
-                for ( var property in objectMap ) {
-                    if (objectMap.hasOwnProperty(property)) {
-                        if (isObject(objectMap[property])) {
-                            ret[property] = recursiveObjectFilter(objectItem[property], objectMap[property]);
-                        } else {
-                            ret[property] = objectItem[property];
+                // Helper function to determine if the item is an array
+                function isArray(item) {
+                    return (item instanceof Array);
+                }
+
+                // Helper function to determine if empty object
+                function isEmptyObject(item) {
+                    var property;
+                    for (property in item) {
+                        if (item.hasOwnProperty(property)) {
+                            return false;
                         }
                     }
+                    return true;
                 }
-                return ret;
-            }
 
-            // Helper function to deep merge object
-            function recursiveMerge(objectOne, objectTwo) {
-                for (var property in objectTwo) {
-                    if (objectTwo.hasOwnProperty(property)) {
-                        // If object two property is an object recurse through it
-                        if (isObject(objectTwo[property])) {
-                            // If the object is empty set to new
-                            if (!objectOne[property] || !isObject(objectOne[property]) || isEmptyObject(objectTwo[property])) {
-                                objectOne[property] = {};
-                            }
-                            objectOne[property] = recursiveMerge(objectOne[property], objectTwo[property]);
-                        } else {
-                            // If set to null or undefined remove the item
-                            if (objectTwo[property] === null || objectTwo[property] === undefined) {
-                                delete objectOne[property];
+                // Helper function to filter an object based on a property map
+                function recursiveObjectFilter(objectItem, objectMap) {
+                    var ret = {},
+                        property;
+                    for (property in objectMap) {
+                        if (objectMap.hasOwnProperty(property)) {
+                            if (isObject(objectMap[property])) {
+                                ret[property] = recursiveObjectFilter(objectItem[property], objectMap[property]);
                             } else {
-                                objectOne[property] = objectTwo[property];
+                                ret[property] = objectItem[property];
                             }
                         }
                     }
+                    return ret;
                 }
-                return objectOne;
-            }
 
-            // Function to get the dashboardlet storage object from localStorage
-            function getStorage(property, storageKey) {
-                var ret, i, l, retArray;
-                // If there is no object just create an empty one
-                if ( ! localStorage[storageKey] ){
-                    localStorage[storageKey] = JSON.stringify({});
-                }
-                // Get the local storage and parse it
-                ret = JSON.parse(localStorage[storageKey]);
-                if (property && ! isEmptyObject(property)) {
-                    if (isObject(property)) {
-                        ret = recursiveObjectFilter(ret, property);
-                    } else if (isArray(property)) {
-                        // If array of properties loop through and return the set                        
-                        for (i = 0, l = property.length, retArray = []; i < l ; i++) {
-                            retArray.push(getStorage(property[i], storageKey));
+                // Helper function to deep merge object
+                function recursiveMerge(objectOne, objectTwo) {
+                    var property;
+                    for (property in objectTwo) {
+                        if (objectTwo.hasOwnProperty(property)) {
+                            // If object two property is an object recurse through it
+                            if (isObject(objectTwo[property])) {
+                                // If the object is empty set to new
+                                if (!objectOne[property] || !isObject(objectOne[property]) || isEmptyObject(objectTwo[property])) {
+                                    objectOne[property] = {};
+                                }
+                                objectOne[property] = recursiveMerge(objectOne[property], objectTwo[property]);
+                            } else {
+                                // If set to null or undefined remove the item
+                                if (objectTwo[property] === null || objectTwo[property] === undefined) {
+                                    delete objectOne[property];
+                                } else {
+                                    objectOne[property] = objectTwo[property];
+                                }
+                            }
                         }
-                        ret = retArray;
+                    }
+                    return objectOne;
+                }
+
+                // Function to actually write the new storage obj to storage
+                function writeStorage(storageObject, storageKey) {
+                    localStorage[storageKey] = JSON.stringify(storageObject);
+                    return storageObject;
+                }
+
+                // Function to get the storage object
+                function getStorage(property, storageKey) {
+                    var ret, i, l, retArray;
+                    // If there is no object just create an empty one
+                    if (! localStorage[storageKey]) {
+                        localStorage[storageKey] = JSON.stringify({});
+                    }
+                    // Get the local storage and parse it
+                    ret = JSON.parse(localStorage[storageKey]);
+                    if (property && !isEmptyObject(property)) {
+                        if (isObject(property)) {
+                            ret = recursiveObjectFilter(ret, property);
+                        } else if (isArray(property)) {
+                            // If array of properties loop through and return the set                        
+                            for (i = 0, l = property.length, retArray = []; i < l; i += 1) {
+                                retArray.push(getStorage(property[i], storageKey));
+                            }
+                            ret = retArray;
+                        } else {
+                           ret = ret[property];
+                        }
+                    }
+                    return ret;
+                }
+
+                // Function to set an attr on storage object
+                // Uses deep merge for item in to storage
+                function setStorage(item, storageKey) {
+                    // Get storage object
+                    var storageObject = getStorage(null, storageKey);
+                    // If the value is null remove it
+                    if (item.value === null) {
+                        delete storageObject[item.property];
                     } else {
-                       ret = ret[property];
+                        // Set the propety
+                        storageObject[item.property] = item.value;
                     }
-                }               
-                return ret;
-            }
-
-            // Function to set an attr on storage object
-            // Uses deep merge for item in to storage
-            function setStorage(item, storageKey) {
-                // Get storage object
-                var storageObject = getStorage(null, storageKey);
-                // If the value is null remove it
-                if (item.value === null) {
-                    delete storageObject[item.property];
-                } else {
-                    // Set the propety
-                    storageObject[item.property] = item.value;
+                    // Write the new object to storage
+                    return writeStorage(storageObject, storageKey);
                 }
-                // Write the new object to storage
-                return writeStorage(storageObject, storageKey);
-            }
 
-            // Function to set an attr on storage object
-            // Uses deep merge for item in to storage
-            function mergeStorage(item, storageKey) {
-                // Get storage object & deep merge item with storage
-                var storageObject = recursiveMerge(getStorage(null, storageKey), item);
-                // Write the new object to storage
-                return writeStorage(storageObject, storageKey);
-            }
+                // Function to set an attr on storage object
+                // Uses deep merge for item in to storage
+                function mergeStorage(item, storageKey) {
+                    // Get storage object & deep merge item with storage
+                    var storageObject = recursiveMerge(getStorage(null, storageKey), item);
+                    // Write the new object to storage
+                    return writeStorage(storageObject, storageKey);
+                }
 
-            // Function to actually write the new storage obj to storage
-            function writeStorage(storageObject, storageKey) {
-                localStorage[storageKey] = JSON.stringify(storageObject);
-                return storageObject;
-            }
-            
-            // Bind on message event
-            window.addEventListener("message", function (e) {
-                var returnData = {},
-                    // Get the message data and parse it
-                    message = JSON.parse(e.data),
-                    // Key to reference our object in localStorage
-                    storageKey = message.storageKey || 'xstore';
-                // If the key exists in storage
-                if ( message.event === 'get') {
-                    // Get storage object - stringify and send back
-                    returnData.storageObject = getStorage(message.item, storageKey);
-                } else if (message.event == 'set') {
-                    if (message.item) {
-                        returnData.storageObject = setStorage(message.item, storageKey);
-                    }
-                } else if (message.event == 'merge') {
-                    if (message.item) {
-                        returnData.storageObject = mergeStorage(message.item, storageKey);
-                    }
-                } else if (message.event == 'delete') {
-                    if (message.item.property) {
-                        // Set property to null
-                        returnData.storageObject = setStorage(message.item, storageKey);
+                // Bind on message event
+                globals.addEventListener("message", function (e) {
+                    var returnData = {},
+                        // Get the message data and parse it
+                        message = JSON.parse(e.data),
+                        // Key to reference our object in localStorage
+                        storageKey = message.storageKey || 'xstore';
+                    // If the key exists in storage
+                    if (message.event === 'get') {
+                        // Get storage object - stringify and send back
+                        returnData.storageObject = getStorage(message.item, storageKey);
+                    } else if (message.event === 'set') {
+                        if (message.item) {
+                            returnData.storageObject = setStorage(message.item, storageKey);
+                        }
+                    } else if (message.event === 'merge') {
+                        if (message.item) {
+                            returnData.storageObject = mergeStorage(message.item, storageKey);
+                        }
+                    } else if (message.event === 'delete') {
+                        if (message.item.property) {
+                            // Set property to null
+                            returnData.storageObject = setStorage(message.item, storageKey);
+                        } else {
+                            // No property to delete so delete all storage
+                            returnData.storageObject = writeStorage({}, storageKey);
+                        }
                     } else {
-                        // No property to delete so delete all storage
-                        returnData.storageObject = writeStorage({}, storageKey);  
+                        //console.log('bad event');
+                        returnData.error = 'Invalid event: ' + message.event;
                     }
-                } else {
-                    //console.log('bad event');
-                    returnData.error = 'Invalid event: ' + message.event;
-                }
-                // If there is a storage object or error set the index
-                if (returnData.storageObject || returnData.error) {
-                    // Set deferred hash
-                    if (message.deferredHash) {
-                        returnData.deferredHash = message.deferredHash;
+                    // If there is a storage object or error set the index
+                    if (returnData.storageObject || returnData.error) {
+                        // Set deferred hash
+                        if (message.deferredHash) {
+                            returnData.deferredHash = message.deferredHash;
+                        }
                     }
-                }
-                // Post the return message back as JSON
-                e.source.postMessage(JSON.stringify(returnData), e.origin);
-            }, false);
+                    // Post the return message back as JSON
+                    e.source.postMessage(JSON.stringify(returnData), e.origin);
+                }, false);
+            }(this));
         </script>
         <!-- Google Analytics - Remove if you self host -->
         <script>
