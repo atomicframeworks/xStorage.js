@@ -167,7 +167,7 @@ var xStorage = (function (globals) {
                     'item': item
                 });
             // Set the deferred object reference
-            deferredObject[hash] = {
+            deferredObject[deferredHash] = {
                 resolve: resolve,
                 reject: reject
             };
