@@ -5,13 +5,13 @@
     #   #  #            AtomicFrameworks
     
 */
-/*global document*/
+/*global document, setInterval*/
 var xStorage = (function (globals) {
     'use strict';
     // Setting - The base domain of the proxy
-    var proxyDomain = 'http://atomicframeworks.github.io',
+    var proxyDomain = 'http://localhost:8000',
         // Setting - The page where the proxy JavaScript is stored
-        proxyPage = '/xStorage.js',
+        proxyPage = '/proxy.html',
         // Setting - The variable on proxy localStorage that wil used as an object store
         storageKey = 'xStorage',
         // Object to store deferred callbacks
@@ -20,6 +20,54 @@ var xStorage = (function (globals) {
         iframe = document.createElement("iframe"),
         // Window object used to pass messages between the iframes
         proxyWindowObject,
+        // Token returned from addEventListener used to detach the listener for non IE
+        listenerToken,
+        // Script var used to insert JSON3 script if JSON is unsupported
+        script,
+        // Check if postMessage supported
+        usePostMessage = (globals.postMessage !== undefined),
+        // Used to cache bust hash changes for browsers that do not support postMessage (<=IE7)
+        cacheBust = 0,
+        // Used to store current hash for browsers that do not support postMessage (<=IE7)
+        hash = globals.location.hash,
+        // Polling delay used to check hash change for browsers that do not support postMessage (<=IE7)
+        delay = 333,
+        // Function to add proxy iFrame to document when DOM is ready
+        addProxy = function () {
+            iframe = document.body.appendChild(iframe);
+            proxyWindowObject = iframe.contentWindow;
+        },
+        // IE function for DOM ready. Retain a reference to it so we can detach the event
+        handleReadyStateChange = function () {
+            if (document.readyState === "complete") {
+                document.detachEvent("onreadystatechange", handleReadyStateChange);
+                addProxy();
+            }
+        },
+        // Function that is fired on window message or hash change for browsers that do not support postMessage (<=IE7)
+        handleMessageEvent = function (event) {
+            var response;
+            if (event.origin === proxyDomain) {
+                // Parse the response
+                response = JSON.parse(event.data);
+                // if there is a deferred object resolve and remove
+                if (response.deferredHash) {
+                    if (response.error) {
+                        // Reject if error                        
+                        deferredObject[response.deferredHash].reject(response.error);
+                    } else {
+                        // Resolve the deferred object
+                        deferredObject[response.deferredHash].resolve(response.storageObject);
+                    }
+                    // Remove the deferred item
+                    delete deferredObject[response.deferredIndex];
+                } else if (response.error) {
+                    throw new Error(response.error);
+                }
+            } else {
+                throw new Error('Bad domain: ' + proxyDomain +  '  origin:' + event.origin);
+            }
+        },
         Deferred = globals.Promise || function (func) {
             var that = this;
             // Fake promise interface if Promise not available
@@ -57,11 +105,42 @@ var xStorage = (function (globals) {
                 func(that.resolve, that.reject);
             }
         };
-    // Add the proxy iframe to DOM and style it
+    // Set iFrame attributes
     iframe.src = proxyDomain + proxyPage;
     iframe.style.display = "none";
-    iframe = document.body.appendChild(iframe);
-    proxyWindowObject = iframe.contentWindow;
+
+    // If JSON is not supported add it
+    if (!globals.JSON) {
+        script = document.createElement('script');
+        script.setAttribute('src', '//cdnjs.cloudflare.com/ajax/libs/json3/3.3.0/json3.min.js');
+        document.getElementsByTagName('head')[0].appendChild(script);
+    }
+
+    // If postMessage not supported set up polling for hash change
+    if (!usePostMessage) {
+        // Poll for hash changes
+        setInterval(function () {
+            if (globals.location.hash !== hash) {
+                // Set new hash
+                hash = globals.location.hash;
+                handleMessageEvent({
+                    origin: proxyDomain,
+                    data: hash.substr(1)
+                });
+            }
+        }, delay);
+    }
+
+    // Cross browser document ready
+    if (globals.addEventListener) {
+        listenerToken = document.addEventListener("DOMContentLoaded", function () {
+            document.removeEventListener("DOMContentLoaded", listenerToken);
+            addProxy();
+        });
+    } else if (globals.attachEvent) {
+        // IE will have to check readyState on change
+        listenerToken = document.attachEvent("onreadystatechange", handleReadyStateChange);
+    }
 
     // IE7 and lower uses attachEvent
     globals.addEventListener = globals.addEventListener || globals.attachEvent;
@@ -80,11 +159,11 @@ var xStorage = (function (globals) {
     function createPromisefunction(event, item) {
         return function (resolve, reject) {
             // Message to set the storage
-            var hash = randomHash(),
+            var deferredHash = randomHash(),
                 message = JSON.stringify({
                     'event': event,
                     'storageKey': storageKey,
-                    'deferredHash': hash,
+                    'deferredHash': deferredHash,
                     'item': item
                 });
             // Set the deferred object reference
@@ -93,7 +172,25 @@ var xStorage = (function (globals) {
                 reject: reject
             };
             // Send the message and target URI
-            proxyWindowObject.postMessage(message, '*');
+            //proxyWindowObject.postMessage(message, '*');
+            if (usePostMessage) {
+                // Post the message as JSON
+                proxyWindowObject.postMessage(message, '*');
+            } else {
+                // postMessage not available so set  hash
+                if (iframe !== null) {
+                    // Cache bust messages with the same info
+                    cacheBust += 1;
+                    message.cacheBust = ((+new Date()) + cacheBust);
+                    if (iframe.src) {
+                        iframe.src = proxyDomain + proxyPage + '#' + JSON.stringify(message);
+                    } else if (iframe.contentWindow !== null && iframe.contentWindow.location !== null) {
+                        iframe.contentWindow.location = proxyDomain + proxyPage + '#' + JSON.stringify(message);
+                    } else {
+                        iframe.setAttribute('src', proxyDomain + proxyPage + '#' + JSON.stringify(message));
+                    }
+                }
+            }
         };
     }
 
@@ -140,29 +237,7 @@ var xStorage = (function (globals) {
     // Bind the message event for getting storage
     (function bindWindow() {
         // Bind the message back listener
-        globals.addEventListener('message', function (event) {
-            var response;
-            if (event.origin === proxyDomain) {
-                // Parse the response
-                response = JSON.parse(event.data);
-                // if there is a deferred object resolve and remove
-                if (response.deferredHash) {
-                    if (response.error) {
-                        // Reject if error                        
-                        deferredObject[response.deferredHash].reject(response.error);
-                    } else {
-                        // Resolve the deferred object
-                        deferredObject[response.deferredHash].resolve(response.storageObject);
-                    }
-                    // Remove the deferred item
-                    delete deferredObject[response.deferredIndex];
-                } else if (response.error) {
-                    throw new Error(response.error);
-                }
-            } else {
-                throw new Error('Bad domain: ' + proxyDomain +  '  origin:' + event.origin);
-            }
-        }, false);
+        globals.addEventListener('message', handleMessageEvent, false);
     }());
     // Return the public methods
     return {
