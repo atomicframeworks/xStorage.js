@@ -9,9 +9,9 @@
 var xStorage = (function (globals) {
     'use strict';
     // Setting - The base domain of the proxy
-    var proxyDomain = 'http://localhost:8000',
+    var proxyDomain = 'http://atomicframeworks.github.io',
         // Setting - The page where the proxy JavaScript is stored
-        proxyPage = '/proxy.html',
+        proxyPage = '/xStorage.js',
         // Setting - The variable on proxy localStorage that wil used as an object store
         storageKey = 'xStorage',
         // Object to store deferred callbacks
