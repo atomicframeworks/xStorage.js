@@ -175,7 +175,8 @@
                             cacheBust += 1;
                             returnData.cacheBust = ((+new Date()) + cacheBust);
                             // postMessage not available so set top location hash - Replace the hash with nothing then add new
-                            globals.top.location = globals.top.location.href.replace(globals.top.location.hash, '') + '#' + JSON.stringify(returnData);
+                            hash = '#' + JSON.stringify(returnData);
+                            globals.location = globals.location.href.replace(globals.location.hash, '') + hash;
                         }
                     };
 
