@@ -29,21 +29,9 @@ var xStorage = (function (globals) {
         // Used to cache bust hash changes for browsers that do not support postMessage (<=IE7)
         cacheBust = 0,
         // Used to store current hash for browsers that do not support postMessage (<=IE7)
-        hash = globals.location.hash,
+        hash,
         // Polling delay used to check hash change for browsers that do not support postMessage (<=IE7)
         delay = 333,
-        // Function to add proxy iFrame to document when DOM is ready
-        addProxy = function () {
-            iframe = document.body.appendChild(iframe);
-            proxyWindowObject = iframe.contentWindow;
-        },
-        // IE function for DOM ready. Retain a reference to it so we can detach the event
-        handleReadyStateChange = function () {
-            if (document.readyState === "complete") {
-                document.detachEvent("onreadystatechange", handleReadyStateChange);
-                addProxy();
-            }
-        },
         // Function that is fired on window message or hash change for browsers that do not support postMessage (<=IE7)
         handleMessageEvent = function (event) {
             var response;
@@ -66,6 +54,34 @@ var xStorage = (function (globals) {
                 }
             } else {
                 throw new Error('Bad domain: ' + proxyDomain +  '  origin:' + event.origin);
+            }
+        },
+        // Function to add proxy iFrame to document when DOM is ready and set polling if needed
+        handleDocumentReady = function () {
+            iframe = document.body.appendChild(iframe);
+            proxyWindowObject = iframe.contentWindow;
+
+            // If postMessage not supported set up polling for hash change
+            if (!usePostMessage) {
+                // Poll for hash changes
+                hash = proxyWindowObject.location.hash;
+                setInterval(function () {
+                    if (proxyWindowObject.location.hash !== hash) {
+                        // Set new hash
+                        hash = proxyWindowObject.location.hash;
+                        handleMessageEvent({
+                            origin: proxyDomain,
+                            data: hash.substr(1)
+                        });
+                    }
+                }, delay);
+            }
+        },
+        // IE function for DOM ready. Retain a reference to it so we can detach the event
+        handleReadyStateChange = function () {
+            if (document.readyState === "complete") {
+                document.detachEvent("onreadystatechange", handleReadyStateChange);
+                handleDocumentReady();
             }
         },
         Deferred = globals.Promise || function (func) {
@@ -106,6 +122,7 @@ var xStorage = (function (globals) {
             }
         };
     // Set iFrame attributes
+    iframe.id = 'xStorage';
     iframe.src = proxyDomain + proxyPage;
     iframe.style.display = "none";
 
@@ -116,26 +133,11 @@ var xStorage = (function (globals) {
         document.getElementsByTagName('head')[0].appendChild(script);
     }
 
-    // If postMessage not supported set up polling for hash change
-    if (!usePostMessage) {
-        // Poll for hash changes
-        setInterval(function () {
-            if (globals.location.hash !== hash) {
-                // Set new hash
-                hash = globals.location.hash;
-                handleMessageEvent({
-                    origin: proxyDomain,
-                    data: hash.substr(1)
-                });
-            }
-        }, delay);
-    }
-
     // Cross browser document ready
     if (globals.addEventListener) {
         listenerToken = document.addEventListener("DOMContentLoaded", function () {
             document.removeEventListener("DOMContentLoaded", listenerToken);
-            addProxy();
+            handleDocumentReady();
         });
     } else if (globals.attachEvent) {
         // IE will have to check readyState on change
@@ -182,12 +184,13 @@ var xStorage = (function (globals) {
                     // Cache bust messages with the same info
                     cacheBust += 1;
                     message.cacheBust = ((+new Date()) + cacheBust);
+                    hash = '#' + JSON.stringify(message);
                     if (iframe.src) {
-                        iframe.src = proxyDomain + proxyPage + '#' + JSON.stringify(message);
+                        iframe.src = proxyDomain + proxyPage + hash;
                     } else if (iframe.contentWindow !== null && iframe.contentWindow.location !== null) {
-                        iframe.contentWindow.location = proxyDomain + proxyPage + '#' + JSON.stringify(message);
+                        iframe.contentWindow.location = proxyDomain + proxyPage + hash;
                     } else {
-                        iframe.setAttribute('src', proxyDomain + proxyPage + '#' + JSON.stringify(message));
+                        iframe.setAttribute('src', proxyDomain + proxyPage + hash);
                     }
                 }
             }
